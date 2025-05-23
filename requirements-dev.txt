@@ -1,0 +1,24 @@
+# requirements-dev.txt
+# 開発・テスト用の依存関係
+
+# メインの依存関係
+-r requirements.txt
+
+# テスト関連
+pytest>=7.0.0
+pytest-cov>=4.0.0
+pytest-mock>=3.8.0
+
+# コード品質
+black>=22.0.0
+isort>=5.10.0
+flake8>=5.0.0
+mypy>=0.991
+
+# セキュリティ
+bandit>=1.7.4
+safety>=2.3.0
+
+# ドキュメント生成（オプション）
+sphinx>=5.0.0
+sphinx-rtd-theme>=1.0.0

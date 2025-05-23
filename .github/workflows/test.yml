@@ -1,0 +1,156 @@
+# .github/workflows/test.yml
+name: Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+        python-version: [3.7, 3.8, 3.9, '3.10', '3.11']
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Cache pip packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov pillow-simd || pip install pytest pytest-cov
+
+    - name: Create test images
+      run: |
+        python -c "
+        from PIL import Image
+        import os
+        os.makedirs('test_images', exist_ok=True)
+        
+        # テスト用画像を生成
+        img = Image.new('RGB', (100, 100), color='red')
+        img.save('test_images/test_red.jpg')
+        
+        img = Image.new('RGB', (200, 150), color='blue')
+        img.save('test_images/test_blue.png')
+        
+        # グラデーション画像
+        import numpy as np
+        arr = np.zeros((100, 100, 3), dtype=np.uint8)
+        for i in range(100):
+            arr[i, :, :] = [i*2, i*2, i*2]
+        img = Image.fromarray(arr)
+        img.save('test_images/test_gradient.png')
+        "
+
+    - name: Test CLI basic functionality
+      run: |
+        python silkscreen_converter.py test_images/test_red.jpg -o test_output_red.png
+        python silkscreen_converter.py test_images/test_blue.png -o test_output_blue.png
+        python silkscreen_converter.py test_images/test_gradient.png -o test_output_gradient.png
+
+    - name: Test different formats
+      run: |
+        python silkscreen_converter.py test_images/test_red.jpg -o test_output.png --format PNG
+        python silkscreen_converter.py test_images/test_red.jpg -o test_output.tiff --format TIFF
+        python silkscreen_converter.py test_images/test_red.jpg -o test_output.pdf --format PDF
+        python silkscreen_converter.py test_images/test_red.jpg -o test_output.svg --format AI
+
+    - name: Test different parameters
+      run: |
+        python silkscreen_converter.py test_images/test_gradient.png --lines 10 --angle 30 --shape square
+        python silkscreen_converter.py test_images/test_gradient.png --lines 20 --angle 60 --shape circle
+        python silkscreen_converter.py test_images/test_gradient.png --contrast 1.5 --brightness 10
+
+    - name: Test batch processing
+      run: |
+        python silkscreen_converter.py test_images/ --batch --lines 15
+
+    - name: Run unit tests
+      run: |
+        pytest tests/ -v --cov=silkscreen_converter --cov-report=xml
+
+    - name: Verify output files exist
+      run: |
+        python -c "
+        import os
+        files = ['test_output_red.png', 'test_output_blue.png', 'test_output_gradient.png']
+        for f in files:
+            assert os.path.exists(f), f'File {f} does not exist'
+        print('All output files verified successfully')
+        "
+
+    - name: Upload coverage to Codecov
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.10'
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install linting tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 black isort mypy
+    
+    - name: Run black (code formatting check)
+      run: black --check --diff silkscreen_converter.py
+    
+    - name: Run isort (import sorting check)  
+      run: isort --check-only --diff silkscreen_converter.py
+    
+    - name: Run flake8 (linting)
+      run: flake8 silkscreen_converter.py --max-line-length=88 --extend-ignore=E203,W503
+    
+    - name: Run mypy (type checking)
+      run: mypy silkscreen_converter.py --ignore-missing-imports
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install security tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit safety
+    
+    - name: Run bandit (security linting)
+      run: bandit -r silkscreen_converter.py
+    
+    - name: Check dependencies for known vulnerabilities
+      run: |
+        pip install -r requirements.txt
+        safety check
