@@ -31,6 +31,8 @@ except ImportError:
 
 # SVG生成用（AI形式のベース）
 try:
+    import defusedxml
+    defusedxml.defuse_stdlib()
     import xml.etree.ElementTree as ET
 
     SVG_AVAILABLE = True
@@ -42,7 +44,9 @@ class SilkscreenConverter:
     """シルクスクリーン用データ変換クラス"""
 
     def __init__(self):
-        self.supported_formats = [".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tiff"]
+        self.supported_formats = [
+            ".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tiff"
+        ]
         self.dot_data = []  # ベクターデータ用の網点情報
 
     def load_image(self, input_path):
@@ -128,7 +132,9 @@ class SilkscreenConverter:
 
         return Image.fromarray(result_array)
 
-    def _draw_dot(self, array, center_x, center_y, size, angle, shape, width, height):
+    def _draw_dot(
+        self, array, center_x, center_y, size, angle, shape, width, height
+    ):
         """指定した形状の網点を描画"""
         radius = size // 2
 
@@ -151,12 +157,15 @@ class SilkscreenConverter:
                     distance = math.sqrt(rotated_x**2 + rotated_y**2)
                     draw_pixel = distance <= radius
                 elif shape == "square":
-                    draw_pixel = abs(rotated_x) <= radius and abs(rotated_y) <= radius
+                    draw_pixel = (
+                        abs(rotated_x) <= radius and abs(rotated_y) <= radius
+                    )
                 elif shape == "diamond":
                     draw_pixel = abs(rotated_x) + abs(rotated_y) <= radius
                 elif shape == "line":
                     draw_pixel = (
-                        abs(rotated_y) <= radius * 0.3 and abs(rotated_x) <= radius
+                        abs(rotated_y) <= radius * 0.3
+                        and abs(rotated_x) <= radius
                     )
 
                 if draw_pixel:
@@ -234,12 +243,18 @@ class SilkscreenConverter:
                         c.drawPath(path, fill=1)
                     elif dot["shape"] == "line":
                         # ライン形状
-                        c.rect(x - size / 2, y - size * 0.15, size, size * 0.3, fill=1)
+                        c.rect(
+                            x - size / 2, y - size * 0.15,
+                            size, size * 0.3, fill=1
+                        )
             else:
                 # ラスター画像をPDFに埋め込み
-                temp_path = tempfile.mktemp(suffix=".png")
-                image.save(temp_path, "PNG", dpi=(dpi, dpi))
-                c.drawImage(temp_path, 0, 0, pdf_width, pdf_height)
+                with tempfile.NamedTemporaryFile(
+                    suffix=".png", delete=False
+                ) as temp_file:
+                    temp_path = temp_file.name
+                    image.save(temp_path, "PNG", dpi=(dpi, dpi))
+                    c.drawImage(temp_path, 0, 0, pdf_width, pdf_height)
                 os.unlink(temp_path)
 
             c.save()
@@ -477,7 +492,8 @@ def main(
 
         image_files = []
         for file in os.listdir(input_path):
-            if any(file.lower().endswith(ext) for ext in converter.supported_formats):
+            if any(file.lower().endswith(ext)
+                   for ext in converter.supported_formats):
                 image_files.append(file)
 
         if not image_files:
