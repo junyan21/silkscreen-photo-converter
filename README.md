@@ -9,18 +9,15 @@
 
 写真を自動的にシルクスクリーン印刷用のモノクロ2階調データに変換するコマンドラインツールです。Photoshopでの手動作業を完全自動化し、**K-100%の純粋な黒**のみで構成された高品質な印刷データを生成します。
 
-![Demo](https://via.placeholder.com/800x400/2563eb/white?text=Before+%E2%86%92+After+Conversion)
-
 ## ✨ 特徴
 
-- 🎯 **プロ品質**: K-100%の純粋な黒のみで出力（グレー不使用）
-- 🔄 **完全自動化**: Photoshopでの手動作業を自動化
+- 🎯 **品質**: K-100%の純粋な黒のみで出力（グレー不使用）
+- 🔄 **自動化**: Photoshopでの手動作業を自動化
 - 📐 **ベクター対応**: AI・PDF形式でベクターデータ出力
 - ⚙️ **カスタマイズ可能**: 線数・角度・網点形状を詳細設定
 - 🚀 **一括処理**: フォルダ内の画像を一括変換
 - 🎨 **多形式対応**: PNG・TIFF・PDF・AI形式での出力
-- 🧪 **テスト済み**: 自動テストでマルチプラットフォーム対応保証
-
+  
 ## 🚀 クイックスタート
 
 ### 方法1: GitHubからダウンロード
@@ -319,48 +316,3 @@ pytest -x
 - [Inkscape](https://inkscape.org/) - 無料のベクター編集ソフト
 - [pytest](https://pytest.org/) - テストフレームワーク
 - [GitHub Actions](https://github.com/features/actions) - CI/CD
-
-## 🤝 コントリビューション
-
-プルリクエストやIssueを歓迎します！
-
-### 開発に参加する
-
-```bash
-# リポジトリをフォーク後
-git clone https://github.com/yourusername/silkscreen-photo-converter.git
-cd silkscreen-photo-converter
-
-# 開発用依存関係をインストール
-pip install -r requirements-dev.txt
-
-# 開発用ブランチを作成
-git checkout -b feature/new-feature
-
-# テストを実行して動作確認
-pytest
-
-# 変更をコミット
-git commit -m "Add new feature"
-
-# プルリクエストを送信
-git push origin feature/new-feature
-```
-
-### バグ報告・機能要望
-
-GitHubのIssueで報告してください：
-- **バグ報告**: 実行環境・エラーメッセージ・再現手順を含める
-- **機能要望**: 具体的な使用場面・期待する動作を記載
-
-### コード規約
-
-- **フォーマット**: Black
-- **import順序**: isort
-- **リンティング**: flake8
-- **型ヒント**: mypy対応
-- **テストカバレッジ**: 80%以上
-
-## 📄 ライセンス
-
-MIT License - 詳細は[LICENSE](LICENSE)ファイルを参照してください。
