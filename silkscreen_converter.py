@@ -12,13 +12,14 @@ pip install Pillow numpy click reportlab svglib
 AI形式の出力にはIllustratorまたは互換ソフトが必要です。
 """
 
+import math
+import os
+import tempfile
+from io import BytesIO
+
 import click
 import numpy as np
 from PIL import Image, ImageEnhance
-import os
-import math
-import tempfile
-from io import BytesIO
 
 # PDF/AI生成用ライブラリ
 try:
