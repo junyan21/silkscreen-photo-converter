@@ -373,11 +373,12 @@ class SilkscreenConverter:
         brightness=0,
         dpi=300,
         format_type="PNG",
+        body_color="white",
     ):
         """メイン変換処理"""
 
         click.echo(f"🔄 変換開始: {input_path}")
-        click.echo(f"   設定 - 線数: {lines}, 角度: {angle}°, 形状: {dot_shape}")
+        click.echo(f"   設定 - 線数: {lines}, 角度: {angle}°, 形状: {dot_shape}, ボディ色: {body_color}")
 
         # ベクター出力が必要かどうかを判定
         vector_output = format_type.upper() in ["AI", "PDF"]
@@ -394,6 +395,12 @@ class SilkscreenConverter:
         if contrast != 1.0 or brightness != 0:
             gray_image = self.adjust_image(gray_image, contrast, brightness)
             click.echo("🔄 明度・コントラスト調整完了")
+
+        # 3.5. ボディ色に応じた画像処理
+        if body_color.lower() == "black":
+            # 黒ボディの場合は画像を反転（明るい部分が印刷される）
+            gray_image = gray_image.point(lambda x: 255 - x)
+            click.echo("🔄 黒ボディ用画像反転完了")
 
         # 4. 網点処理（ベクター対応）
         halftone_image = self.create_halftone_pattern(
@@ -448,6 +455,13 @@ class SilkscreenConverter:
     help="出力形式 (デフォルト: PNG)",
 )
 @click.option("--batch", is_flag=True, help="フォルダ内の全画像を一括変換")
+@click.option(
+    "--body-color",
+    "body_color",
+    type=click.Choice(["white", "black"]),
+    default="white",
+    help="Tシャツボディ色 (white: 白ボディ, black: 黒ボディ, デフォルト: white)",
+)
 def main(
     input_path,
     output_path,
@@ -459,6 +473,7 @@ def main(
     dpi,
     format_type,
     batch,
+    body_color,
 ):
     """
     シルクスクリーン用写真変換ツール（AI・PDF対応版）
@@ -471,10 +486,14 @@ def main(
       - PDF: ベクターデータ（拡大縮小可能）
       - AI: Adobe Illustrator互換SVG形式
 
+    ボディ色対応:
+      - white: 白いTシャツ用（暗い部分が印刷される）
+      - black: 黒いTシャツ用（明るい部分が印刷される）
+
     例:
-      python silkscreen_converter.py photo.jpg -o output.ai --format AI
-      python silkscreen_converter.py photo.jpg -o output.pdf --format PDF
-      python silkscreen_converter.py images/ --batch --format AI --lines 15
+      python silkscreen_converter.py photo.jpg -o output.ai --format AI --body-color white
+      python silkscreen_converter.py photo.jpg -o output.pdf --format PDF --body-color black
+      python silkscreen_converter.py images/ --batch --format AI --lines 15 --body-color white
     """
 
     # 必要なライブラリチェック
@@ -511,7 +530,7 @@ def main(
             else:
                 ext = format_type.lower()
 
-            output_file = os.path.join(input_path, f"{name}_silkscreen.{ext}")
+            output_file = os.path.join(input_path, f"{name}_silkscreen_{body_color}.{ext}")
 
             try:
                 converter.convert(
@@ -524,6 +543,7 @@ def main(
                     brightness,
                     dpi,
                     format_type,
+                    body_color,
                 )
             except Exception as e:
                 click.echo(f"❌ エラー ({file}): {e}")
@@ -538,7 +558,7 @@ def main(
             ext = "svg"
         else:
             ext = format_type.lower()
-        output_path = f"{name}_silkscreen.{ext}"
+        output_path = f"{name}_silkscreen_{body_color}.{ext}"
 
     # バリデーション
     if lines < 5 or lines > 50:
@@ -562,6 +582,7 @@ def main(
             brightness,
             dpi,
             format_type,
+            body_color,
         )
 
         # 形式別の追加情報
