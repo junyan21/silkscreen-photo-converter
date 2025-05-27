@@ -17,6 +17,7 @@
 - ⚙️ **カスタマイズ可能**: 線数・角度・網点形状を詳細設定
 - 🚀 **一括処理**: フォルダ内の画像を一括変換
 - 🎨 **多形式対応**: PNG・TIFF・PDF・AI形式での出力
+- 👕 **Tシャツ対応**: 白・黒のTシャツボディに応じた最適処理
   
 ## 🚀 クイックスタート
 
@@ -75,8 +76,11 @@ pip install -r requirements-dev.txt
 ### 基本的な使用方法
 
 ```bash
-# 基本変換（推奨設定）
+# 基本変換（推奨設定・白Tシャツ用）
 python silkscreen_converter.py photo.jpg -o output.png
+
+# 黒Tシャツ用変換（画像を反転処理）
+python silkscreen_converter.py photo.jpg -o output.png --body-color black
 
 # AI形式で出力（Illustratorで編集可能）
 python silkscreen_converter.py photo.jpg -o design.ai --format AI
@@ -88,8 +92,11 @@ python silkscreen_converter.py photo.jpg -o print.pdf --format PDF
 ### 詳細設定での変換
 
 ```bash
-# Tシャツくん用設定（10-15線推奨）
+# Tシャツくん用設定（10-15線推奨・白Tシャツ）
 python silkscreen_converter.py photo.jpg --lines 15 --angle 45 --shape circle
+
+# 黒Tシャツ用設定（画像反転処理）
+python silkscreen_converter.py photo.jpg --lines 15 --angle 45 --body-color black
 
 # 高精細製版用設定
 python silkscreen_converter.py photo.jpg --lines 20 --dpi 600 --format TIFF
@@ -101,8 +108,11 @@ python silkscreen_converter.py photo.jpg --contrast 1.5 --brightness 10
 ### 一括変換（バッチ処理）
 
 ```bash
-# フォルダ内の全画像を一括変換
+# フォルダ内の全画像を一括変換（白Tシャツ用）
 python silkscreen_converter.py images/ --batch --lines 15
+
+# 黒Tシャツ用一括変換
+python silkscreen_converter.py images/ --batch --lines 15 --body-color black
 
 # AI形式で一括変換
 python silkscreen_converter.py photos/ --batch --format AI --lines 15
@@ -120,6 +130,7 @@ python silkscreen_converter.py photos/ --batch --format AI --lines 15
 | `--brightness` | 明度調整 | 0 | -50 to 50 |
 | `--dpi` | 出力解像度 | 300 | 72-1200 |
 | `--format` | 出力形式 | PNG | PNG/TIFF/PDF/AI |
+| `--body-color` | Tシャツボディ色 | white | white/black |
 | `--batch` | 一括変換モード | - | フラグ |
 
 ## 📄 出力形式の比較
@@ -130,6 +141,30 @@ python silkscreen_converter.py photos/ --batch --format AI --lines 15
 | **TIFF** | 印刷用ラスター | 高品質印刷 | ❌ | ❌ |
 | **PDF** | ベクター・印刷最適 | 製版サービス入稿 | ✅ | ⚠️ |
 | **AI** | ベクター・編集可能 | Illustratorで編集 | ✅ | ✅ |
+
+## 👕 Tシャツボディ色別設定ガイド
+
+シルクスクリーンでは、Tシャツのボディ色によって処理方法が異なります：
+
+### 白Tシャツ（デフォルト）
+- **設定**: `--body-color white`（省略可）
+- **処理**: 通常処理（暗い部分がインクになる）
+- **出力**: `photo_silkscreen_white.png`
+- **用途**: 明るい色のTシャツ全般
+
+### 黒Tシャツ
+- **設定**: `--body-color black`
+- **処理**: 画像反転（明るい部分がインクになる）
+- **出力**: `photo_silkscreen_black.png`
+- **用途**: 濃い色のTシャツ全般
+
+```bash
+# 白Tシャツ用（通常処理）
+python silkscreen_converter.py photo.jpg --body-color white
+
+# 黒Tシャツ用（反転処理）
+python silkscreen_converter.py photo.jpg --body-color black
+```
 
 ## 🎯 線数設定ガイド
 
@@ -169,26 +204,38 @@ silkscreen-photo-converter/
 ls photos/
 # sample1.jpg  sample2.png  sample3.webp
 
-# 2. テスト変換（1枚）
+# 2. テスト変換（1枚・白Tシャツ用）
 python silkscreen_converter.py photos/sample1.jpg --lines 15
 
-# 3. 設定を調整
+# 3. 黒Tシャツ用テスト
+python silkscreen_converter.py photos/sample1.jpg --lines 15 --body-color black
+
+# 4. 設定を調整
 python silkscreen_converter.py photos/sample1.jpg --lines 15 --contrast 1.2
 
-# 4. 一括変換
+# 5. 一括変換
 python silkscreen_converter.py photos/ --batch --lines 15 --format AI
 ```
 
 ### 製版サービス入稿用
 
 ```bash
-# 高解像度PDF（製版サービス用）
+# 高解像度PDF（製版サービス用・白Tシャツ）
 python silkscreen_converter.py design.jpg \
   --format PDF \
   --dpi 600 \
   --lines 20 \
   --contrast 1.1 \
-  -o final_design.pdf
+  --body-color white \
+  -o final_design_white.pdf
+
+# 黒Tシャツ用製版データ
+python silkscreen_converter.py design.jpg \
+  --format PDF \
+  --dpi 600 \
+  --lines 20 \
+  --body-color black \
+  -o final_design_black.pdf
 ```
 
 ### Illustratorでの編集用

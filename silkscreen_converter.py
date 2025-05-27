@@ -373,11 +373,12 @@ class SilkscreenConverter:
         brightness=0,
         dpi=300,
         format_type="PNG",
+        body_color="white",
     ):
         """メイン変換処理"""
 
         click.echo(f"🔄 変換開始: {input_path}")
-        click.echo(f"   設定 - 線数: {lines}, 角度: {angle}°, 形状: {dot_shape}")
+        click.echo(f"   設定 - 線数: {lines}, 角度: {angle}°, 形状: {dot_shape}, Tシャツ: {body_color}")
 
         # ベクター出力が必要かどうかを判定
         vector_output = format_type.upper() in ["AI", "PDF"]
@@ -401,11 +402,17 @@ class SilkscreenConverter:
         )
         click.echo("🔄 網点処理完了")
 
-        # 5. モノクロ2階調変換
+        # 5. Tシャツボディ色に応じた処理
+        if body_color.lower() == "black":
+            # 黒Tシャツ用: 画像を反転（明るい部分がインクになる）
+            halftone_image = halftone_image.point(lambda x: 255 - x)
+            click.echo("🔄 黒Tシャツ用画像反転完了")
+        
+        # 6. モノクロ2階調変換
         final_image = self.to_monochrome_bitmap(halftone_image)
         click.echo("🔄 モノクロ2階調変換完了")
 
-        # 6. 形式別保存
+        # 7. 形式別保存
         if format_type.upper() == "PDF":
             self.save_pdf(final_image, output_path, dpi)
         elif format_type.upper() == "AI":
@@ -448,6 +455,13 @@ class SilkscreenConverter:
     help="出力形式 (デフォルト: PNG)",
 )
 @click.option("--batch", is_flag=True, help="フォルダ内の全画像を一括変換")
+@click.option(
+    "--body-color",
+    "body_color",
+    type=click.Choice(["white", "black"]),
+    default="white",
+    help="Tシャツのボディ色 (デフォルト: white)",
+)
 def main(
     input_path,
     output_path,
@@ -459,6 +473,7 @@ def main(
     dpi,
     format_type,
     batch,
+    body_color,
 ):
     """
     シルクスクリーン用写真変換ツール（AI・PDF対応版）
@@ -474,7 +489,8 @@ def main(
     例:
       python silkscreen_converter.py photo.jpg -o output.ai --format AI
       python silkscreen_converter.py photo.jpg -o output.pdf --format PDF
-      python silkscreen_converter.py images/ --batch --format AI --lines 15
+      python silkscreen_converter.py photo.jpg --body-color black
+      python silkscreen_converter.py images/ --batch --format AI --lines 15 --body-color white
     """
 
     # 必要なライブラリチェック
@@ -511,7 +527,7 @@ def main(
             else:
                 ext = format_type.lower()
 
-            output_file = os.path.join(input_path, f"{name}_silkscreen.{ext}")
+            output_file = os.path.join(input_path, f"{name}_silkscreen_{body_color}.{ext}")
 
             try:
                 converter.convert(
@@ -524,6 +540,7 @@ def main(
                     brightness,
                     dpi,
                     format_type,
+                    body_color,
                 )
             except Exception as e:
                 click.echo(f"❌ エラー ({file}): {e}")
@@ -538,7 +555,7 @@ def main(
             ext = "svg"
         else:
             ext = format_type.lower()
-        output_path = f"{name}_silkscreen.{ext}"
+        output_path = f"{name}_silkscreen_{body_color}.{ext}"
 
     # バリデーション
     if lines < 5 or lines > 50:
@@ -562,6 +579,7 @@ def main(
             brightness,
             dpi,
             format_type,
+            body_color,
         )
 
         # 形式別の追加情報
